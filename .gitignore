@@ -1,0 +1,5 @@
+.env
+
+# the binary
+cdn-proxy
+*.exe
