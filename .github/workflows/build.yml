@@ -24,7 +24,7 @@ jobs:
         run: go build -o cdn-proxy ./main.go
 
       - name: archive build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cdn-proxy-app-build
           path: ./cdn-proxy
