@@ -21,10 +21,10 @@ jobs:
           go-version: '1.24.3'
 
       - name: build app
-        run: go build -v ./...
+        run: go build -o cdn-proxy ./main.go
 
       - name: archive build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: go-app-build
+          name: cdn-proxy-app-build
           path: ./cdn-proxy
