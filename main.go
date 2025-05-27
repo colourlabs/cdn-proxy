@@ -22,15 +22,20 @@ func main() {
 
 	minioURLStr := os.Getenv("MINIO_ENDPOINT")
 	if minioURLStr == "" {
-		log.Fatal("MINIO_ENDPOINT is not set")
+		log.Fatalf("MINIO_ENDPOINT is not set")
+	}
+
+	minioBucket := os.Getenv("MINIO_BUCKET")
+	if minioBucket == "" {
+		log.Fatalf("MINIO_BUCKET is not set")
 	}
 
 	listenAddr := os.Getenv("LISTEN_ADDR")
 	if listenAddr == "" {
-		listenAddr = ":3002"
+		listenAddr = ":5000"
 	}
 
-	minioURL, err := url.Parse(minioURLStr)
+	minioURL, err := url.Parse(minioURLStr + "/" + minioBucket)
 	if err != nil {
 		log.Fatalf("invalid MINIO_ENDPOINT: %v", err)
 	}
@@ -41,6 +46,7 @@ func main() {
 	proxy.Director = func(req *http.Request) {
 		if strings.HasPrefix(req.URL.Path, "/avatars/") {
 			parts := strings.SplitN(strings.TrimPrefix(req.URL.Path, "/avatars/"), "/", 2)
+			
 			if len(parts) == 2 {
 				userID := parts[0]
 				hash := parts[1]
@@ -53,7 +59,7 @@ func main() {
 				q.Del("format")
 				req.URL.RawQuery = q.Encode()
 
-				req.URL.Path = "/bsocial/avatars/" + userID + "/" + hash + "." + format
+				req.URL.Path = "/" + minioBucket + "/avatars/" + userID + "/" + hash + "." + format
 
 				req.URL.Scheme = minioURL.Scheme
 				req.URL.Host = minioURL.Host
