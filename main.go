@@ -68,6 +68,30 @@ func main() {
 			}
 		}
 
+		if strings.HasPrefix(req.URL.Path, "/banners/") {
+			parts := strings.SplitN(strings.TrimPrefix(req.URL.Path, "/banners/"), "/", 2)
+			
+			if len(parts) == 2 {
+				userID := parts[0]
+				hash := parts[1]
+
+				q := req.URL.Query()
+				format := q.Get("format")
+				if format == "" {
+					format = "webp"
+				}
+				q.Del("format")
+				req.URL.RawQuery = q.Encode()
+
+				req.URL.Path = "/" + minioBucket + "/banners/" + userID + "/" + hash + "." + format
+
+				req.URL.Scheme = minioURL.Scheme
+				req.URL.Host = minioURL.Host
+
+				return
+			}
+		}
+
 		originalDirector(req)
 	}
 
