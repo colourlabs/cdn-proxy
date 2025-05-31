@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -71,8 +70,13 @@ func main() {
 		log.Println("no .env file found, reading config from environment")
 	}
 
+	redisAddr := os.Getenv("VALKEY_ADDR")
+	if redisAddr == "" {
+		log.Fatal("VALKEY_ADDR is not set")
+	}
+
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("VALKEY_ADDR"),
+		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
 	})
