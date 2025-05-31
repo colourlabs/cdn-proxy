@@ -54,17 +54,13 @@ func getAudioFilename(ctx context.Context, userID, hash string) (string, error) 
 	}
 
 	var dbFilename string
+	
 	err = db.QueryRowContext(ctx,
 		`SELECT audio_name FROM user_profiles WHERE id = $1 AND audio_hash = $2`,
 		userID, hash).Scan(&dbFilename)
+
 	if err != nil {
 		return "", err
-	}
-
-	cacheKey := "audio_name:" + userID + ":" + hash
-	err = redisClient.Set(ctx, cacheKey, dbFilename, 10 * time.Minute).Err()
-	if err != nil {
-		log.Printf("Redis SET error: %v", err)
 	}
 
 	return dbFilename, nil
