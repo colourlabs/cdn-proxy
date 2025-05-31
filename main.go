@@ -39,25 +39,20 @@ type UserProfile struct {
 }
 
 func getAudioFilename(ctx context.Context, userID, hash string) (string, error) {
-	// Compose redis cache key (you can change the prefix if you want)
 	key := "user:profile:" + userID
 
-	// Try get from Redis
 	jsonStr, err := redisClient.Get(ctx, key).Result()
 	if err == nil {
 		var profile UserProfile
 		if err := json.Unmarshal([]byte(jsonStr), &profile); err == nil {
-			// Check if cached hash matches
 			if profile.AudioHash == hash && profile.AudioName != "" {
 				return profile.AudioName, nil
 			}
 		}
 	} else if err != redis.Nil {
-		// Redis error (not just missing key)
-		log.Printf("Redis GET error: %v", err)
+		log.Printf("valkey GET error: %v", err)
 	}
 
-	// Cache miss or no match -> query Postgres
 	var dbFilename string
 	err = db.QueryRowContext(ctx,
 		`SELECT audio_name FROM user_profiles WHERE id = $1 AND audio_hash = $2`,
@@ -66,13 +61,8 @@ func getAudioFilename(ctx context.Context, userID, hash string) (string, error) 
 		return "", err
 	}
 
-	// Update Redis cache with full profile JSON (optional, but recommended)
-	// You may want to query the full profile instead of just audio_name here.
-	// For example, you could query all fields and cache them as JSON.
-	// For simplicity, let's just cache audio_name here with short TTL:
-
 	cacheKey := "audio_name:" + userID + ":" + hash
-	err = redisClient.Set(ctx, cacheKey, dbFilename, 10*time.Minute).Err()
+	err = redisClient.Set(ctx, cacheKey, dbFilename, 10 * time.Minute).Err()
 	if err != nil {
 		log.Printf("Redis SET error: %v", err)
 	}
